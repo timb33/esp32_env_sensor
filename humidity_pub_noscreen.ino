@@ -1,12 +1,13 @@
 #include <Wire.h>
 #include <time.h>
+#include <Telegraph.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP280.h> // BMP280 library
 //#include "SSD1306.h"  // Library for SSD1306 OLED display
 
-//it's got a display, so I'm using "ESP32S2 Dev Module"    hold boot>press rst> release boot
+//it's got a display, so I'm using "ESP32S2 Dev Module". Get into D(igital)F(irmware)U(prgade) mode via:  hold boot button>press rst button> release boot button
 //libraries via sketch>include:   
 
 // Wi-Fi credentials
@@ -30,6 +31,11 @@ Adafruit_BMP280 bmp; // I2C interface (default address: 0x76 or 0x77)
 // Wi-Fi and MQTT clients
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+// setup telegraph/morse
+const int pinLED = 15; // Pin connected to the LED
+
+Telegraph telegraph(pinLED, 5, HIGH);
 
 // Function to connect to Wi-Fi
 void setupWiFi() {
@@ -58,7 +64,7 @@ void connectToMQTT() {
 
 void setup_spoof() {
   Serial.begin(115200);
-  pinMode(15, OUTPUT);
+  pinMode(pinLED, OUTPUT);
 
   for (int i = 0; i < 3; i++){
     //digitalWrite(15, HIGH);delay(1000);digitalWrite(15, LOW);delay(1000); 
@@ -74,14 +80,12 @@ void setup_spoof() {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(15, OUTPUT);
+  pinMode(pinLED, OUTPUT);
 
     // Initialize I2C with explicit pins: SDA = GPIO33, SCL = GPIO35
-  Wire.begin(33, 35);
+  Wire.begin(33, 35);//s(erial)da(ta), s(erial)cl(ock)
 
-  for (int i = 0; i < 8; i++){
-    //digitalWrite(15, HIGH);delay(1000);digitalWrite(15, LOW);delay(1000); 
-  }
+  telegraph.send("setup");
 
   // Initialize OLED display
   // display.init();
@@ -103,9 +107,7 @@ void setup() {
     //display.drawStringMaxWidth(64, 20, 128, "BMP280 Error!");
     //display.display();
 
-  for (int i = 0; i < 10; i++){
-    digitalWrite(15, HIGH);delay(3000);digitalWrite(15, LOW);delay(3000); 
-  }
+    telegraph.send("setup bmp");
 
     while (1); // Stop execution
   }
@@ -131,9 +133,7 @@ void setup() {
   while (!time(nullptr)) {
     delay(500);
     Serial.print(".");
-    for (int i = 0; i < 2; i++){
-      digitalWrite(15, HIGH);delay(1500);digitalWrite(15, LOW);delay(1500); 
-    }
+    telegraph.send("setup time");
   }
   Serial.println("Time synchronized.");
 
@@ -186,11 +186,11 @@ void loop() {
   Serial.print("Published fake humidity data: ");
   Serial.println(payload);
 
+    telegraph.send("ok");
 
-
-  for (int i = 0; i < 20; i++){
-    digitalWrite(15, HIGH);delay(500);digitalWrite(15, LOW);delay(500); 
-  }
+  // for (int i = 0; i < 20; i++){
+  //   digitalWrite(15, HIGH);delay(500);digitalWrite(15, LOW);delay(500); 
+  // }
 
   // Send data every 10 seconds
 }
