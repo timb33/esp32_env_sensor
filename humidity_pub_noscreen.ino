@@ -1,4 +1,5 @@
 #include <Wire.h>
+#include <time.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <Adafruit_Sensor.h>
@@ -122,6 +123,20 @@ void setup() {
   // display.drawStringMaxWidth(64, 20, 128, "WiFi connected.");
   // display.display();
 
+  // Initialize time with NTP
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov"); // Use UTC (offset = 0, DST = 0)
+  Serial.println("Syncing time with NTP...");
+
+  // Wait until the time is set
+  while (!time(nullptr)) {
+    delay(500);
+    Serial.print(".");
+    for (int i = 0; i < 2; i++){
+      digitalWrite(15, HIGH);delay(1500);digitalWrite(15, LOW);delay(1500); 
+    }
+  }
+  Serial.println("Time synchronized.");
+
   // Initialize MQTT
   client.setServer(mqtt_server, mqtt_port);
   connectToMQTT();
@@ -144,13 +159,21 @@ void loop() {
   }
   client.loop();
 
+  // Get the current time in Zulu/UTC format
+  time_t now;
+  struct tm timeinfo;
+  time(&now);
+  gmtime_r(&now, &timeinfo); // Convert to UTC
+  char time_str[30];
+  strftime(time_str, sizeof(time_str), "%Y-%m-%dT%H:%M:%SZ", &timeinfo); // Format as ISO 8601  
+
   // Read data from BMP280
   float temp_c = bmp.readTemperature(); // Temperature in °C //random(30, 70) + random(0, 99) / 100.0;//
   float pressure_h = bmp.readPressure() / 100.0F; // Pressure in hPa
 
   // Publish the data to MQTT
-  char payload[100]; // Adjust buffer size if needed
-  snprintf(payload, sizeof(payload), "{\"temperature\": %.2f, \"pressure\": %.2f}", temp_c, pressure_h);
+  char payload[150]; 
+  snprintf(payload, sizeof(payload), "{\"temperature\": %.2f, \"pressure\": %.2f, \"timestamp\": \"%s\"}", temp_c, pressure_h, time_str);
   client.publish(mqtt_topic, payload);
 
   // Display data on the OLED
