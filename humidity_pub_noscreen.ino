@@ -37,6 +37,9 @@ const int pinLED = 15; // Pin connected to the LED
 
 Telegraph telegraph(pinLED, 5, HIGH);
 
+String deviceName;
+String mqtt_topic;
+
 // Function to connect to Wi-Fi
 void setupWiFi() {
   Serial.println("Connecting to Wi-Fi...");
@@ -60,6 +63,13 @@ void connectToMQTT() {
       delay(2000);
     }
   }
+}
+
+String getDeviceName() {
+  uint64_t chipId = ESP.getEfuseMac(); // Get MAC address
+  char deviceName[25];
+  snprintf(deviceName, sizeof(deviceName), "esp32-%04X%08X", (uint16_t)(chipId >> 32), (uint32_t)chipId);
+  return String(deviceName);
 }
 
 void setup_spoof() {
@@ -148,10 +158,13 @@ void setup() {
   // display.clear();
   // display.drawStringMaxWidth(64, 20, 128, "Ready!");
   // display.display();
-}
 
-// MQTT topic for humidity data
-const char* mqtt_topic = "home/sensors999/s22/humidity";
+    // Get unique device name
+  deviceName = getDeviceName();
+
+  // MQTT topic
+  mqtt_topic = "home/sensors999/" + deviceName + "/data";
+}
 
 void loop() {
   if (!client.connected()) {
@@ -174,7 +187,7 @@ void loop() {
   // Publish the data to MQTT
   char payload[150]; 
   snprintf(payload, sizeof(payload), "{\"temperature\": %.2f, \"pressure\": %.2f, \"timestamp\": \"%s\"}", temp_c, pressure_h, time_str);
-  client.publish(mqtt_topic, payload);
+  client.publish(mqtt_topic.c_str(), payload);
 
   // Display data on the OLED
   // display.clear();
