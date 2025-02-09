@@ -5,7 +5,7 @@
 #include <Adafruit_BMP280.h> // BMP280 library
 //#include "SSD1306.h"  // Library for SSD1306 OLED display
 
-//it's got a display, so I'm using "ESP32S2 De Module"
+//it's got a display, so I'm using "ESP32S2 Dev Module"    hold boot>press rst> release boot
 //libraries via sketch>include:   
 
 // Wi-Fi credentials
@@ -145,13 +145,12 @@ void loop() {
   client.loop();
 
   // Read data from BMP280
-  float temp_c = bmp.readTemperature(); // Temperature in °C
-  float pressure_h = //random(30, 70) + random(0, 99) / 100.0;//
-  bmp.readPressure() / 100.0F; // Pressure in h
+  float temp_c = bmp.readTemperature(); // Temperature in °C //random(30, 70) + random(0, 99) / 100.0;//
+  float pressure_h = bmp.readPressure() / 100.0F; // Pressure in hPa
 
-  // Publish the fake data to MQTT
-  char payload[50];
-  snprintf(payload, sizeof(payload), "{\"humidity\": %.2f}", pressure_h);
+  // Publish the data to MQTT
+  char payload[100]; // Adjust buffer size if needed
+  snprintf(payload, sizeof(payload), "{\"temperature\": %.2f, \"pressure\": %.2f}", temp_c, pressure_h);
   client.publish(mqtt_topic, payload);
 
   // Display data on the OLED
