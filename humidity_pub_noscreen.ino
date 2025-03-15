@@ -15,7 +15,7 @@ const char* ssid = "";
 const char* password = "";
 
 // MQTT broker details
-const char* mqtt_server = "broker.hivemq.com";
+const char* mqtt_server = "broker.local";
 const int mqtt_port = 1883;
 const char* mqtt_user = ""; // Anonymous access
 const char* mqtt_password = "";
@@ -92,10 +92,10 @@ void setup() {
   Serial.begin(115200);
   pinMode(pinLED, OUTPUT);
 
-    // Initialize I2C with explicit pins: SDA = GPIO33, SCL = GPIO35
-  Wire.begin(33, 35);//s(erial)da(ta), s(erial)cl(ock)
+    // Initialize I2C with explicit pins: SDA = GPIO35, SCL = GPIO33
+  Wire.begin(35, 33);//s(erial)da(ta), s(erial)cl(ock)
 
-  telegraph.send("setup");
+  telegraph.send("aaaaaaaa"); //.-
 
   // Initialize OLED display
   // display.init();
@@ -117,7 +117,7 @@ void setup() {
     //display.drawStringMaxWidth(64, 20, 128, "BMP280 Error!");
     //display.display();
 
-    telegraph.send("setup bmp");
+    telegraph.send("bbbbbbbb");//-...
 
     while (1); // Stop execution
   }
@@ -143,7 +143,7 @@ void setup() {
   while (!time(nullptr)) {
     delay(500);
     Serial.print(".");
-    telegraph.send("setup time");
+    telegraph.send("cccccccc");//-.-.
   }
   Serial.println("Time synchronized.");
 
@@ -199,8 +199,7 @@ void loop() {
   Serial.print("Published fake humidity data: ");
   Serial.println(payload);
 
-    telegraph.send("ok");
-
+    telegraph.send("dddddddd");//-..
   // for (int i = 0; i < 20; i++){
   //   digitalWrite(15, HIGH);delay(500);digitalWrite(15, LOW);delay(500); 
   // }
